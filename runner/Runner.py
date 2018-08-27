@@ -2,20 +2,18 @@
 # Auther: guofengyang
 # Date: 2018/8/24 11:46
 import copy
+import datetime
 import logging
 import os
-
-import datetime
 import shutil
 import subprocess
+import time
 from multiprocessing.pool import ThreadPool as Pool
 
 import sys
-from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
-from openpyxl.styles import Font
-import time
-
 from openpyxl import load_workbook
+from openpyxl.styles import Font
+from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
 from openpyxl.styles import numbers
 
 from runner import RUNNER, ROOT
@@ -36,6 +34,7 @@ class Runner(object):
         result = self.result
         if os.path.exists(result):
             shutil.rmtree(result)
+            time.sleep(1)
         # create log path
         os.mkdir(result)
         time.sleep(1)
@@ -49,19 +48,20 @@ class Runner(object):
         :rtype:dict
         """
         logger.debug(u"start")
+        info = []
         result = {}
         self.checkDevices()
         self.init()
-        pool = Pool(processes=5)
+        pool = Pool(processes=len(self.config))
         for key, value in self.config.items():
             sn = value["sn"]
             packages = value["packages"]
             throttle = value["throttle"]
-            info = pool.apply_async(self.monkey, (sn, packages, throttle,))
-            result.update(info.get())
+            info.append(pool.apply_async(self.monkey, (sn, packages, throttle,)))
         pool.close()
         pool.join()
-        self.to_excel(result)
+        for i in info:
+            self.to_excel(result.update(i.get()))
         return result
 
     def checkDevices(self):
@@ -194,9 +194,6 @@ class Runner(object):
 
 
 if __name__ == "__main__":
-    result  = os.path.dirname(os.path.abspath(__file__))
-    root = os.path.dirname(result)
-    sys.path.append(root)
-    sys.path.append(result)
+    print(sys.path)
     r = Runner()
     r.run()
