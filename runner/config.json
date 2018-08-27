@@ -12,12 +12,5 @@
       "ecarx.membercenter"
     ],
     "throttle": "500 1000"
-  },
-  "device3": {
-    "sn": "10.43.115.4:1234",
-    "packages": [
-      "ecarx.membercenter"
-    ],
-    "throttle": "500 1000"
   }
 }

@@ -23,7 +23,7 @@ class ParseLog(object):
         with open(self.path, "r") as f:
             for line, eachLine in enumerate(f):
                 for i in self.crashInfo:
-                    if i.upper() in eachLine.upper():
+                    if i in eachLine:
                         if i == u"FATAL EXCEPTION":
                             self.crash += 1
                         else:

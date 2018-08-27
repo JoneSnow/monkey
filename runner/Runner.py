@@ -16,7 +16,7 @@ from openpyxl.styles import Font
 from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
 from openpyxl.styles import numbers
 
-#添加包路径
+# 添加包路径
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
 from runner import RUNNER, ROOT
@@ -64,7 +64,8 @@ class Runner(object):
         pool.close()
         pool.join()
         for i in info:
-            self.to_excel(result.update(i.get()))
+            result.update(i.get())
+        self.to_excel(result)
         return result
 
     def checkDevices(self):
