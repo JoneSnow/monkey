@@ -37,7 +37,8 @@ class Runner(object):
     def run(self):
         """
         入口函数
-        :return:{u'0123456789ABCDEF': {'duration': '0:00:10.546000', 'crash': 0, 'detail': {}, 'anr': 0}}
+        :return:{u'0123456789ABCDEF': {'duration': '0:00:04.237000', 'crash': 2, 'detail': {'01-01 00:12:12.080': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: main\r\n java.lang.NullPointerException\r\n \tat com.android.commands.monkey.MonkeySourceRandom.randomPoint(MonkeySourceRandom.java:324)\r\n', '01-01 00:12:11.070': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: UI\r\n java.lang.NullPointerException\r\n \tat com.android.internal.widget.PointerLocationView.addPointerEvent(PointerLocationView.java:552)\r\n'}, 'anr': 0, 'rom': '03.02.08950.H30.00009'}}
+        :rtype:dict
         """
         result = {}
         self.checkDevices()
@@ -117,7 +118,7 @@ class Runner(object):
                 ws["{}{}".format(i, start_row)].font = font
                 ws["{}{}".format(i, start_row)].fill = fill
                 ws["{}{}".format(i, start_row)].border = border
-                #设置时间格式为文本
+                # 设置时间格式为文本
                 if i == "D":
                     ws["{}{}".format(i, start_row)].number_format = numbers.FORMAT_TEXT
 
@@ -161,4 +162,4 @@ class Runner(object):
 if __name__ == "__main__":
     r = Runner()
     r.run()
-    #10.43.105.168:1234
+    # 10.43.105.168:1234
