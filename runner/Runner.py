@@ -33,6 +33,13 @@ class Runner(object):
         # create log path
         os.mkdir(result)
         time.sleep(1)
+        #logger初始化
+        #连接网络设备
+        config_devices = self.getConfigDevices()
+        for device in config_devices:
+            if ":" in device:
+                res = Tools.execute("adb connect {ip}".format(ip=device))
+                print(res)
 
     def run(self):
         """
@@ -59,7 +66,7 @@ class Runner(object):
         """
         results = []
         connect_devices = Tools.devices()
-        config_devices = (value["sn"] for key, value in self.config.items())
+        config_devices = self.getConfigDevices()
         for item in config_devices:
             if item not in connect_devices:
                 results.append(item)
@@ -67,13 +74,22 @@ class Runner(object):
             raise ValueError(
                 u"can't find config devices {} in connect devices, please check config.json".format(results))
 
+    def getConfigDevices(self):
+        '''
+        获取config配置文件的所有sn号
+        :return: 返回含有sn号的生成器
+        '''
+        sns = (value["sn"] for key, value in self.config.items())
+        return sns
+
     def monkey(self, sn, packages, throttle):
+        sn_string = sn.replace(":", "_") if ":" in sn else sn
         info = {}
         package_string = ""
         starttime = datetime.datetime.now()
         t = starttime.strftime("%Y%m%d%H%M%S")
-        logcat_log = "logcat_{}_{}".format(sn, t)
-        monkey_log = "monkey_{}_{}".format(sn, t)
+        logcat_log = "logcat_{}_{}".format(sn_string, t)
+        monkey_log = "monkey_{}_{}".format(sn_string, t)
         result_path = os.path.join(ROOT, "result")
         logcat_log_path = os.path.join(result_path, logcat_log)
         monkey_log_path = os.path.join(result_path, monkey_log)

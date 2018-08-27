@@ -1,6 +1,6 @@
 {
   "device1": {
-    "sn": "0123456789ABCDEF",
+    "sn": "10.43.105.168:1234",
     "packages": [
       "ecarx.membercenter"
     ],
