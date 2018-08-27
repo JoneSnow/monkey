@@ -8,6 +8,7 @@ import os
 import datetime
 import shutil
 import subprocess
+from multiprocessing.pool import ThreadPool as Pool
 
 from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
 from openpyxl.styles import Font
@@ -39,11 +40,6 @@ class Runner(object):
         time.sleep(1)
         # logger初始化
         init_log()
-        # 连接网络设备
-        config_devices = self.getConfigDevices()
-        for device in config_devices:
-            if ":" in device:
-                res = Tools.execute("adb connect {ip}".format(ip=device))
 
     def run(self):
         """
@@ -51,16 +47,19 @@ class Runner(object):
         :return:{u'0123456789ABCDEF': {'duration': '0:00:04.237000', 'crash': 2, 'detail': {'01-01 00:12:12.080': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: main\r\n java.lang.NullPointerException\r\n \tat com.android.commands.monkey.MonkeySourceRandom.randomPoint(MonkeySourceRandom.java:324)\r\n', '01-01 00:12:11.070': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: UI\r\n java.lang.NullPointerException\r\n \tat com.android.internal.widget.PointerLocationView.addPointerEvent(PointerLocationView.java:552)\r\n'}, 'anr': 0, 'rom': '03.02.08950.H30.00009'}}
         :rtype:dict
         """
-        logger.debug(u"monkey测试开始")
+        logger.debug(u"start")
         result = {}
         self.checkDevices()
         self.init()
+        pool = Pool(processes=5)
         for key, value in self.config.items():
             sn = value["sn"]
             packages = value["packages"]
             throttle = value["throttle"]
-            info = self.monkey(sn, packages, throttle)
-            result.update(info)
+            info = pool.apply_async(self.monkey, (sn, packages, throttle,))
+            result.update(info.get())
+        pool.close()
+        pool.join()
         self.to_excel(result)
         return result
 
@@ -69,6 +68,12 @@ class Runner(object):
         检查配置文件中的sn号是否存在于已连接的设备中
         :raise: ValueError
         """
+        # 连接网络设备
+        logger.debug(u"链接网络设备")
+        config_devices = self.getConfigDevices()
+        for device in config_devices:
+            if ":" in device:
+                Tools.execute("adb connect {ip}".format(ip=device))
         logger.debug(u"检查配置文件中的设备是否在链接状态")
         results = []
         connect_devices = Tools.devices()
@@ -86,11 +91,12 @@ class Runner(object):
         获取config配置文件的所有sn号
         :return: 返回含有sn号的生成器
         '''
-        sns = (value["sn"] for key, value in self.config.items())
-        logger.debug(u"获取配置文件的设备号{}".format(list(sns)))
+        sns = [value["sn"] for key, value in self.config.items()]
+        logger.debug(u"获取配置文件的设备号{}".format(sns))
         return sns
 
     def monkey(self, sn, packages, throttle):
+        logger.debug(u"{}, monkey测试开始".format(sn))
         sn_string = sn.replace(":", "_") if ":" in sn else sn
         info = {}
         package_string = ""
@@ -120,11 +126,11 @@ class Runner(object):
         log = ParseLog(path=logcat_log_path)
         res = log.parse()
         info[sn] = {"duration": duration, "crash": log.crash, "anr": log.anr, "detail": res, "rom": rom}
-        logger.debug(u"monkey执行结果数据:{}".format(info))
+        logger.debug(u"{}, monkey执行结果数据:{}".format(sn, info))
         return info
 
     def to_excel(self, dic):
-        logger.debug(u"生产测试结果表格")
+        logger.debug(u"生成测试结果表格")
         filepath = os.path.join(self.result, "result_{}.xlsx".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")))
         template_path = os.path.join(RUNNER, "template.xlsx")
         dic = copy.deepcopy(dic)
@@ -189,4 +195,3 @@ class Runner(object):
 if __name__ == "__main__":
     r = Runner()
     r.run()
-    # 10.43.105.168:1234
