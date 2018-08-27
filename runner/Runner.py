@@ -2,6 +2,7 @@
 # Auther: guofengyang
 # Date: 2018/8/24 11:46
 import copy
+import logging
 import os
 
 import datetime
@@ -16,8 +17,11 @@ from openpyxl import load_workbook
 from openpyxl.styles import numbers
 
 from runner import RUNNER, ROOT
+from runner.log import init_log
 from runner.parse_log import ParseLog
 from runner.tools import Tools
+
+logger = logging.getLogger(__file__)
 
 
 class Runner(object):
@@ -33,13 +37,13 @@ class Runner(object):
         # create log path
         os.mkdir(result)
         time.sleep(1)
-        #logger初始化
-        #连接网络设备
+        # logger初始化
+        init_log()
+        # 连接网络设备
         config_devices = self.getConfigDevices()
         for device in config_devices:
             if ":" in device:
                 res = Tools.execute("adb connect {ip}".format(ip=device))
-                print(res)
 
     def run(self):
         """
@@ -47,6 +51,7 @@ class Runner(object):
         :return:{u'0123456789ABCDEF': {'duration': '0:00:04.237000', 'crash': 2, 'detail': {'01-01 00:12:12.080': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: main\r\n java.lang.NullPointerException\r\n \tat com.android.commands.monkey.MonkeySourceRandom.randomPoint(MonkeySourceRandom.java:324)\r\n', '01-01 00:12:11.070': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: UI\r\n java.lang.NullPointerException\r\n \tat com.android.internal.widget.PointerLocationView.addPointerEvent(PointerLocationView.java:552)\r\n'}, 'anr': 0, 'rom': '03.02.08950.H30.00009'}}
         :rtype:dict
         """
+        logger.debug(u"monkey测试开始")
         result = {}
         self.checkDevices()
         self.init()
@@ -64,6 +69,7 @@ class Runner(object):
         检查配置文件中的sn号是否存在于已连接的设备中
         :raise: ValueError
         """
+        logger.debug(u"检查配置文件中的设备是否在链接状态")
         results = []
         connect_devices = Tools.devices()
         config_devices = self.getConfigDevices()
@@ -71,6 +77,7 @@ class Runner(object):
             if item not in connect_devices:
                 results.append(item)
         if results:
+            logger.error(u"检查设备链接状态失败", exc_info=True)
             raise ValueError(
                 u"can't find config devices {} in connect devices, please check config.json".format(results))
 
@@ -80,6 +87,7 @@ class Runner(object):
         :return: 返回含有sn号的生成器
         '''
         sns = (value["sn"] for key, value in self.config.items())
+        logger.debug(u"获取配置文件的设备号{}".format(list(sns)))
         return sns
 
     def monkey(self, sn, packages, throttle):
@@ -112,9 +120,11 @@ class Runner(object):
         log = ParseLog(path=logcat_log_path)
         res = log.parse()
         info[sn] = {"duration": duration, "crash": log.crash, "anr": log.anr, "detail": res, "rom": rom}
+        logger.debug(u"monkey执行结果数据:{}".format(info))
         return info
 
     def to_excel(self, dic):
+        logger.debug(u"生产测试结果表格")
         filepath = os.path.join(self.result, "result_{}.xlsx".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")))
         template_path = os.path.join(RUNNER, "template.xlsx")
         dic = copy.deepcopy(dic)
@@ -173,6 +183,7 @@ class Runner(object):
                 ws["C{}".format(start_row)] = detail_value.strip()
                 start_row += 1
         wb.save(filepath)
+        logger.debug(u"测试结束")
 
 
 if __name__ == "__main__":

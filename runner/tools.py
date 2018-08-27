@@ -28,12 +28,14 @@ class Tools(object):
         :exception:  未查找的任何设备，函数抛出ValueError异常
         :return(list):  返回sn列表。 如[sn1, sn2]
         """
+        logger.debug(u"获取所有连接状态的设备号")
         res = os.popen("adb devices")
         res = res.read().split()
         devices = [item for item in res if len(item) >= 16]
         if len(devices) == 0:
             logger.error(u"Can't find any devices", exc_info=True)
             raise ValueError(u"Can't find any devices")
+        logger.debug(u"获取所有连接状态的设备号:{}".format(devices))
         return devices
 
     @staticmethod
@@ -44,6 +46,7 @@ class Tools(object):
         :return(str): 返回第一个sn号， 如： "1111111111111111"
         """
         devices = Tools.devices()
+        logger.debug(u"获取连接状态的第一个设备号:{}".format(devices[0]))
         return devices[0]
 
     @staticmethod
