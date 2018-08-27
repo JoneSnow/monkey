@@ -1,0 +1,9 @@
+{
+  "device1": {
+    "sn": "0123456789ABCDEF",
+    "packages": [
+      "ecarx.membercenter"
+    ],
+    "throttle": "500 100"
+  }
+}
