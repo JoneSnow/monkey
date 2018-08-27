@@ -10,6 +10,7 @@ import shutil
 import subprocess
 from multiprocessing.pool import ThreadPool as Pool
 
+import sys
 from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
 from openpyxl.styles import Font
 import time
@@ -193,5 +194,9 @@ class Runner(object):
 
 
 if __name__ == "__main__":
+    result  = os.path.dirname(os.path.abspath(__file__))
+    root = os.path.dirname(result)
+    sys.path.append(root)
+    sys.path.append(result)
     r = Runner()
     r.run()
