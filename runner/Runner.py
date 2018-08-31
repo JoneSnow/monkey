@@ -115,7 +115,7 @@ class Runner(object):
         # rom 版本号
         rom = Tools(sn).getSystemVersion()
         for package in packages[:]:
-            package_string += "-p {}".format(package)
+            package_string += "-p {} ".format(package)
         p1 = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(sn=sn,
                                                                                                                logcat_log_path=logcat_log_path),
                               shell=True)
