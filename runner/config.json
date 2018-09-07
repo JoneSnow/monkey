@@ -9,6 +9,6 @@
       "ecarx.membercenter",
       "ecarx.weather"
     ],
-    "throttle": "500 250000"
+    "throttle": "500 1000"
   }
 }
