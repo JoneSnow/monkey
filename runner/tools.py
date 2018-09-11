@@ -178,7 +178,10 @@ class Tools(object):
         :return: 返回系统版本号，如"03.02.08950.H30.00009"
         :rtype: str
         """
-        cmd = "adb -s {sn} shell getprop |findstr ro.build.display.id".format(sn=self.sn)
+        if os.name == "nt":
+            cmd = "adb -s {sn} shell getprop |findstr ro.build.display.id".format(sn=self.sn)
+        else:
+            cmd = "adb -s {sn} shell getprop |grep ro.build.display.id".format(sn=self.sn)
         res = Tools.execute(cmd)
         version = res.split(":")[-1]
         if version:
