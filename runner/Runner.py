@@ -33,14 +33,14 @@ class Runner(object):
         self.result = os.path.join(ROOT, "result")
 
     def init(self):
-        # del log
         result = self.result
-        if os.path.exists(result):
-            shutil.rmtree(result)
-            time.sleep(1)
+        # if os.path.exists(result):
+        #     shutil.rmtree(result)
+        #     time.sleep(1)
         # create log path
-        os.mkdir(result)
-        time.sleep(1)
+        if not os.path.exists(result):
+            os.mkdir(result)
+            time.sleep(1)
         # logger初始化
         init_log()
 
