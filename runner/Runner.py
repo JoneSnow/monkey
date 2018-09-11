@@ -53,6 +53,8 @@ class Runner(object):
         logger.debug(u"start")
         info = []
         result = {}
+        Tools.execute("adb kill-server")
+        Tools.execute("adb start-server")
         self.checkDevices()
         self.init()
         pool = Pool(processes=len(self.config))
