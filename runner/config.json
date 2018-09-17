@@ -2,13 +2,8 @@
   "device1": {
     "sn": "0123456789ABCDEF",
     "packages": [
-      "ecarx.video",
-      "ecarx.news",
-      "com.ecarx.appstore",
-      "ecarx.photo",
-      "ecarx.membercenter",
-      "ecarx.weather"
+      "com.ecarx.multimedia"
     ],
-    "throttle": "500 1000"
+    "throttle": "500 250000"
   }
 }
