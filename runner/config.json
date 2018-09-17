@@ -4,6 +4,6 @@
     "packages": [
       "com.ecarx.multimedia"
     ],
-    "throttle": "500 1000"
+    "throttle": "500 250000"
   }
 }
