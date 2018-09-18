@@ -12,7 +12,7 @@ class ParseLog(object):
         #解析匹配关键字
         self.crashInfo = [
             "FATAL EXCEPTION",
-            "ANR"
+            " ANR "
         ]
         self.crash = 0
         self.anr = 0
@@ -20,11 +20,11 @@ class ParseLog(object):
     def parse(self):
         result = []
         crash_start_line = 0
-        with open(self.path, "r") as f:
+        with open(self.path, "rb") as f:
             for line, eachLine in enumerate(f):
                 for i in self.crashInfo:
                     if i in eachLine:
-                        if i == u"FATAL EXCEPTION":
+                        if i == "FATAL EXCEPTION":
                             self.crash += 1
                         else:
                             self.anr += 1
