@@ -1,6 +1,6 @@
 {
   "device1": {
-    "sn": "10.43.105.179:5555",
+    "sn": "10.43.105.24:5555",
     "packages": [
       "ecarx.video",
       "ecarx.photo"
