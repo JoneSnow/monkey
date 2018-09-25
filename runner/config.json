@@ -2,9 +2,8 @@
   "device1": {
     "sn": "10.43.105.24:5555",
     "packages": [
-      "ecarx.video",
-      "ecarx.photo"
+      "ecarx.video"
     ],
-    "throttle": "500 250000"
+    "throttle": "400 300000"
   }
 }
