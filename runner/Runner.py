@@ -124,7 +124,7 @@ class Runner(object):
         Tools.execute(
             "adb -s {sn} shell monkey {package_string} --ignore-timeouts --ignore-crashes"
             " --ignore-security-exceptions --kill-process-after-error --monitor-native-crashes"
-            " -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
+            " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
                                                                        throttle=throttle, mpath=monkey_log_path))
         Tools.execute("taskkill /t /f /pid {}".format(p1.pid))
         endtime = datetime.datetime.now()
