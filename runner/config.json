@@ -1,9 +1,8 @@
 {
   "device1": {
-    "sn": "10.43.105.66:5555",
+    "sn": "0123456789ABCDEF",
     "packages": [
-      "ecarx.video",
-      "ecarx.photo"
+      "cn.com.ecarx.xiaoka.carmusic"
     ],
     "throttle": "400 300000"
   }
