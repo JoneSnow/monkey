@@ -126,7 +126,7 @@
                 {% endif %}
                 <td> {{item.msg}} </td>
                 <td>
-                    <a class="btn btn-info" href="./{{key}}" role="button" style="color:white">Log</a>
+                    <a class="btn btn-info" href="./{{key|replace(':', '_')}}" role="button" style="color:white">Log</a>
                 </td>
                 {%endfor%}
             </tr>
