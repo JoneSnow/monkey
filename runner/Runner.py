@@ -1,27 +1,20 @@
 # -*- coding:utf-8 -*-
 # Auther: guofengyang
 # Date: 2018/8/24 11:46
-import copy
 import datetime
 import gzip
 import logging
 import os
-import shutil
 import subprocess
 import sys
 import time
 from itertools import islice
 from multiprocessing.pool import ThreadPool as Pool
 
-from openpyxl import load_workbook
-from openpyxl.styles import Font
-from openpyxl.styles import colors, PatternFill, Border, Side, Alignment
-from openpyxl.styles import numbers
-
 # 添加包路径
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
-from runner import RUNNER, ROOT
+from runner import ROOT
 from runner.log import init_log
 from runner.tools import Tools
 
@@ -170,68 +163,6 @@ class Runner(object):
         info[sn] = {"duration": duration, "rom": rom, "detail": detail, "summary": summary, "detail_package_summary": detail_package_summary }
         logger.debug(u"{}, monkey执行结果数据:{}".format(sn, info))
         return info
-
-    def to_excel(self, dic):
-        logger.debug(u"生成测试结果表格")
-        filepath = os.path.join(self.result, "result_{}.xlsx".format(datetime.datetime.now().strftime("%Y%m%d%H%M%S")))
-        template_path = os.path.join(RUNNER, "template.xlsx")
-        dic = copy.deepcopy(dic)
-        shutil.copy(template_path, filepath)
-        wb = load_workbook(filepath)
-        # 简介页面
-        ws = wb["Summary"]
-        start_row = 3
-        font = Font(name=u"宋体", color=colors.BLACK, size=11)
-        fill = PatternFill(fill_type="solid", bgColor="F1E6DC", fgColor="F1E6DC")
-        side = Side(border_style="thin", color=colors.BLACK)
-        border = Border(left=side, right=side, top=side, bottom=side, outline=side)
-        for key, value in dic.items():
-            # 行高
-            ws.row_dimensions[start_row].height = 30
-            for i in ["A", "B", "D", "C", "E", "F"]:
-                ws["{}{}".format(i, start_row)].font = font
-                ws["{}{}".format(i, start_row)].fill = fill
-                ws["{}{}".format(i, start_row)].border = border
-                # 设置时间格式为文本
-                if i == "D":
-                    ws["{}{}".format(i, start_row)].number_format = numbers.FORMAT_TEXT
-
-            ws["A{}".format(start_row)] = value["rom"]
-            ws["B{}".format(start_row)] = key
-            ws["D{}".format(start_row)] = value["duration"][0:-3]
-            ws["E{}".format(start_row)] = value["crash"]
-            ws["F{}".format(start_row)] = value["anr"]
-            if value["crash"] + value["anr"]:
-                result = "FAIL"
-                comFont = Font(size=11, bold=True, name=u"宋体", color=colors.RED)
-                ws["C{}".format(start_row)].font = comFont
-            else:
-                result = "PASS"
-            ws["C{}".format(start_row)] = result
-            start_row += 1
-        # 详细页面
-        ws = wb["Detail"]
-        start_row = 3
-        fill2 = PatternFill(fill_type="solid", bgColor="DEF1EB", fgColor="DEF1EB")
-        alignment = Alignment(wrap_text=True)
-        for key, value in dic.items():
-            detail = value["detail"]
-            for detail_key, detail_value in detail.items():
-                ws.row_dimensions[start_row].height = 50
-                for i in ["A", "B", "C"]:
-
-                    ws["{}{}".format(i, start_row)].fill = fill2
-                    ws["{}{}".format(i, start_row)].border = border
-                    if i == "C":
-                        ws["{}{}".format(i, start_row)].alignment = alignment
-                    if i == "B":
-                        ws["{}{}".format(i, start_row)].number_format = numbers.FORMAT_TEXT
-                ws["A{}".format(start_row)] = key
-                ws["B{}".format(start_row)] = detail_key
-                ws["C{}".format(start_row)] = detail_value.strip()
-                start_row += 1
-        wb.save(filepath)
-        logger.debug(u"测试结束")
 
     def to_html(self, dic):
         from jinja2 import PackageLoader, Environment
