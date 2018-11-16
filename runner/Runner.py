@@ -129,6 +129,7 @@ class Runner(object):
         Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
         #prase log
         endtime = datetime.datetime.now()
         duration = endtime - starttime
