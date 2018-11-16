@@ -122,15 +122,16 @@ class Runner(object):
         rom = Tools(sn).getSystemVersion()
         for package in packages[:]:
             package_string += "-p {} ".format(package)
-        p1 = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(sn=sn,
-                                                                                                               logcat_log_path=logcat_log_path),
-                              shell=True)
-        Tools.execute(
-            "adb -s {sn} shell monkey {package_string} --ignore-timeouts --ignore-crashes"
-            " --ignore-security-exceptions --kill-process-after-error --monitor-native-crashes"
-            " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
-                                                                       throttle=throttle, mpath=monkey_log_path))
-        Tools.execute("taskkill /t /f /pid {}".format(p1.pid))
+        try:
+            p1 = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(
+                sn=sn,logcat_log_path=logcat_log_path),shell=True)
+            Tools.execute(
+                "adb -s {sn} shell monkey {package_string} --ignore-timeouts --ignore-crashes"
+                " --ignore-security-exceptions --kill-process-after-error --monitor-native-crashes"
+                " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
+                                                                           throttle=throttle, mpath=monkey_log_path))
+        finally:
+            Tools.execute("taskkill /t /f /pid {}".format(p1.pid))
         #get log
         Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
