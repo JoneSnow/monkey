@@ -3,12 +3,14 @@
 # Date: 2018/8/24 11:46
 import copy
 import datetime
+import gzip
 import logging
 import os
 import shutil
 import subprocess
 import sys
 import time
+from itertools import islice
 from multiprocessing.pool import ThreadPool as Pool
 
 from openpyxl import load_workbook
@@ -21,11 +23,10 @@ path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__
 sys.path.append(path)
 from runner import RUNNER, ROOT
 from runner.log import init_log
-from runner.parse_log import ParseLog
 from runner.tools import Tools
 
 logger = logging.getLogger(__file__)
-
+import os.path
 
 class Runner(object):
     def __init__(self):
@@ -67,7 +68,7 @@ class Runner(object):
         pool.join()
         for i in info:
             result.update(i.get())
-        self.to_excel(result)
+        self.to_html(result)
         return result
 
     def checkDevices(self):
@@ -112,8 +113,11 @@ class Runner(object):
         logcat_log = "logcat_{}_{}".format(sn_string, t)
         monkey_log = "monkey_{}_{}".format(sn_string, t)
         result_path = os.path.join(ROOT, "result")
-        logcat_log_path = os.path.join(result_path, logcat_log)
-        monkey_log_path = os.path.join(result_path, monkey_log)
+        log_path = os.path.join(result_path, sn_string)
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+        logcat_log_path = os.path.join(log_path, logcat_log)
+        monkey_log_path = os.path.join(log_path, monkey_log)
         # rom 版本号
         rom = Tools(sn).getSystemVersion()
         for package in packages[:]:
@@ -127,12 +131,42 @@ class Runner(object):
             " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
                                                                        throttle=throttle, mpath=monkey_log_path))
         Tools.execute("taskkill /t /f /pid {}".format(p1.pid))
+        #get log
+        Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
+        #prase log
         endtime = datetime.datetime.now()
-        duration = str(endtime - starttime)
+        duration = endtime - starttime
         # parse log
-        log = ParseLog(path=logcat_log_path)
-        res = log.parse()
-        info[sn] = {"duration": duration, "crash": log.crash, "anr": log.anr, "detail": res, "rom": rom}
+        detail = []
+        summary = { "anr":0, "crash":0, "strictmode":0, "other":0}
+        detail_package_summary = {}
+        for item in self.parse_log(log_path):
+            detail.append(item)
+            packagename = item.get("package", None)
+            if packagename:
+                # res = map(lambda x: x in detail_package_summary, packagename)
+                # if not all(res):
+                if packagename not in  detail_package_summary:
+                    detail_package_summary.update({packagename:{"anr": 0, "crash":0, "strictmode":0, "other":0}})
+                if item["anr"]:
+                    detail_package_summary[packagename]["anr"] += 1
+                elif item["crash"]:
+                    detail_package_summary[packagename]["crash"] += 1
+                elif item["strictmode"]:
+                    detail_package_summary[packagename]["strictmode"] += 1
+                elif item["other"]:
+                    detail_package_summary[packagename]["other"] += 1
+            if item["anr"]:
+                summary["anr"] += 1
+            elif item["crash"]:
+                summary["crash"] += 1
+            elif item["strictmode"]:
+                summary["strictmode"] += 1
+            elif item["other"]:
+                summary["other"] += 1
+        info[sn] = {"duration": duration, "rom": rom, "detail": detail, "summary": summary, "detail_package_summary": detail_package_summary }
         logger.debug(u"{}, monkey执行结果数据:{}".format(sn, info))
         return info
 
@@ -198,6 +232,70 @@ class Runner(object):
         wb.save(filepath)
         logger.debug(u"测试结束")
 
+    def to_html(self, dic):
+        from jinja2 import PackageLoader, Environment
+
+        env = Environment(loader=PackageLoader("runner", 'templates'))  # 创建一个包加载器对象
+
+        template = env.get_template('template.html')  # 获取一个模板文件
+        s = template.render(dict = dic)
+        with open("../result/report.html", "w") as f:
+            f.write(s)
+
+    def parse_log(self, path):
+        dropbox = os.path.join(path, "dropbox")
+        for filename in os.listdir(dropbox):
+            filepath = os.path.join(dropbox, filename)
+            yield self.get_info(filename, filepath)
+
+    def get_info(self, filename, filepath):
+        info = {
+            "filename": filename,
+            "anr": 0,
+            "crash": 0,
+            "strictmode": 0,
+            "other": 0
+        }
+        if filename.startswith("system_app"):
+            for item in [".txt", ".gz"]:
+                detail = self.get_info_detail(filepath, item)
+                if detail:
+                    package, msg = detail
+                    info["msg"] = msg
+                    info["package"] = package
+        if filename.startswith("system_app_anr"):
+            info["anr"] += 1
+        elif filename.startswith("system_app_crash"):
+            info["crash"] += 1
+        elif filename.startswith("system_app_strictmode"):
+            info["strictmode"] += 1
+        else:
+            info["other"] += 1
+        return info
+
+    def get_info_detail(self, filepath, filetype=".txt"):
+        if filepath.endswith(filetype):
+            package = []
+            if filetype == ".txt":
+                with open(filepath, "r") as f:
+                    msg = islice(f, 0, 10)
+                    msg = list(msg)
+                    for i in msg:
+                        if "Package" in i:
+                            package.append(i.split(":")[1].strip())
+                    package = ",".join(package)
+                    msg = "<br>".join(msg)
+                    return (package, msg)
+            elif filetype == ".gz":
+                with gzip.open(filepath, "r") as f:
+                    msg = islice(f, 0, 10)
+                    msg = list(msg)
+                    for i in msg:
+                        if "Package" in i:
+                            package.append(i.split(":")[1].strip())
+                    package = ",".join(package)
+                    msg = "<br>".join(msg)
+                    return (package, msg)
 
 if __name__ == "__main__":
     r = Runner()

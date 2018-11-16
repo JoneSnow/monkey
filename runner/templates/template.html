@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="zh">
+<head>
+    <link rel="stylesheet" href="../resource/bootstrap-4.1.3-dist/css/bootstrap.min.css">
+    <title>Monkey Report</title>
+</head>
+    <h1 style="text-align:center">Monkey Report</h1>
+    <table class="table table-dark table-hover ">
+        <caption>Summary For Devices</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">ROM</th>
+          <th scope="col">Device Name</th>
+          <th scope="col">Execution Time</th>
+          <th scope="col">App Crash</th>
+          <th scope="col">App ANR</th>
+          <th scope="col">Strict Mode Error</th>
+          <th scope="col">Other</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%for key, value in dict.iteritems()%}
+            <tr>
+              <th scope="row">{{loop.index}}</th>
+              <td>
+                  {%if value.rom %}
+                  {{value.rom}}
+                  {%else%} NA
+                  {%endif%}
+              </td>
+              <td>
+                  {{key}}
+              </td>
+              <td>
+                  {{value.duration}}
+              </td>
+              <td>
+                  {%if value.summary.crash%}
+                  {{value.summary.crash}}
+                  {%else%} 0
+                  {%endif%}
+              </td>
+              <td>
+                  {%if value.summary.anr%}
+                  {{value.summary.anr}}
+                  {%else%} 0
+                  {%endif%}
+              </td>
+              <td>
+                  {%if value.summary.strictmode%}
+                  {{value.summary.strictmode}}
+                  {%else%} 0
+                  {%endif%}
+              </td>
+
+              <td>
+                  {%if value.summary.other%}
+                  {{value.summary.other}}
+                  {%else%} 0
+                  {%endif%}
+              </td>
+            </tr>
+         {%endfor%}
+      </tbody>
+    </table>
+
+    <table class="table table-dark table-hover ">
+      <caption>Summary For Package</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Device Name</th>
+          <th scope="col">Package Name</th>
+          <th scope="col">App Crash</th>
+          <th scope="col">App ANR</th>
+          <th scope="col">Strict Mode Error</th>
+          <th scope="col">Other</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%for key, value in dict.iteritems()%}
+          {%for key_detail, value_detail in value.detail_package_summary.iteritems()%}
+            <tr>
+                <th scope="row">{{loop.index}}</th>
+                <td>{{key}}</td>
+                <td>{{key_detail}}</td>
+                <td>{{value_detail.crash}}</td>
+                <td>{{value_detail.anr}}</td>
+                <td>{{value_detail.strictmode}}</td>
+                <td>{{value_detail.other}}</td>
+              {%endfor%}
+            </tr>
+         {%endfor%}
+      </tbody>
+    </table>
+
+    <h2>Detail</h2>
+    <table class="table table-dark table-hover ">
+        <caption>Detail Info</caption>
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Device Name And Filename</th>
+          <th scope="col">Package Name</th>
+          <th scope="col">Error Type</th>
+          <th scope="col">Message</th>
+          <th scope="col">Log</th>
+        </tr>
+      </thead>
+      <tbody>
+        {%for key, value in dict.iteritems()%}
+            {% for item in value.detail%}
+            <tr>
+                <td>{{loop.index}}</td>
+                <td>{{key}}<br>{{item.filename}}</td>
+                <td>{{item.packagename}}</td>
+                {% if item.anr %}
+                    <td>ANR</td>
+                {% elif item.crash %}
+                    <td>Crash</td>
+                {% elif item.strictmode %}
+                    <td>Strictmode</td>
+                {% else %}
+                    <td>Other</td>
+                {% endif %}
+                <td> {{item.msg}} </td>
+                <td>
+                    <a class="btn btn-info" href="./{{key}}" role="button" style="color:white">Log</a>
+                </td>
+                {%endfor%}
+            </tr>
+        {%endfor%}
+      </tbody>
+    </table>
+    <script src="../resource/bootstrap-4.1.3-dist/js/bootstrap.min.js"></script>
+</html>
