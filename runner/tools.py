@@ -143,7 +143,7 @@ class Tools(object):
         获取设备当前时间
         :return: 当前时间字符串，如"2018-07-25 10:50:32"
         """
-        res = Tools.execute('adb -s {} shell "date +\\"%Y-%m-%d %H:%M:%S\\""'.format(self.sn))
+        res = Tools.execute('adb -s {} shell "date +\\"%Y%m%d_%H%M%S\\""'.format(self.sn)).replace(r"\r\r\n", "").strip()
         return res
 
     @staticmethod

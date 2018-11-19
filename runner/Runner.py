@@ -8,14 +8,17 @@ import os
 import subprocess
 import sys
 import time
+from _subprocess import GetCurrentProcess
 from itertools import islice
 from multiprocessing.pool import ThreadPool as Pool
 
 # 添加包路径
+from runner.GetCpuInfo import GetCpuInfo
+from runner.GetMemInfo import GetMemInfo
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
-from runner import ROOT
+from runner import ROOT, RUNNER
 from runner.log import init_log
 from runner.tools import Tools
 
@@ -96,6 +99,8 @@ class Runner(object):
 
     def monkey(self, sn, packages, throttle):
         logger.debug(u"{}, monkey测试开始".format(sn))
+        #delete log
+        self.delete_log(sn)
         sn_string = sn.replace(":", "_") if ":" in sn else sn
         info = {}
         package_string = ""
@@ -113,21 +118,29 @@ class Runner(object):
         rom = Tools(sn).getSystemVersion()
         for package in packages[:]:
             package_string += "-p {} ".format(package)
+        pis = []
         try:
-            p1 = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(
+            #收集log
+            p_log = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(
                 sn=sn,logcat_log_path=logcat_log_path),shell=True)
+            #收集cup占有率信息
+            p_cupinfo = GetCpuInfo(packages=packages[:], sn=sn).run()
+            cmd = r"python {}\GetMemInfo.py -p {} -s {}".format(RUNNER," ".join(packages[:]).strip(), sn)
+            p_meminfo = subprocess.Popen(cmd, shell=True)
+            time.sleep(2)
             Tools.execute(
                 "adb -s {sn} shell monkey {package_string} --ignore-timeouts --ignore-crashes"
                 " --ignore-security-exceptions --kill-process-after-error --monitor-native-crashes"
                 " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
-                                                                           throttle=throttle, mpath=monkey_log_path))
+                                                                                           throttle=throttle, mpath=monkey_log_path))
+            pis.append(p_log.pid)
+            pis.append(p_meminfo.pid)
+            pis.extend(p_cupinfo)
         finally:
-            Tools.execute("taskkill /t /f /pid {}".format(p1.pid))
+            for p in pis:
+                Tools.execute("taskkill /t /f /pid {}".format(p))
         #get log
-        Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
-        Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
-        Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
-        Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
+        self.get_log(sn, log_path)
         #prase log
         endtime = datetime.datetime.now()
         duration = endtime - starttime
@@ -139,8 +152,6 @@ class Runner(object):
             detail.append(item)
             packagename = item.get("package", None)
             if packagename:
-                # res = map(lambda x: x in detail_package_summary, packagename)
-                # if not all(res):
                 if packagename not in  detail_package_summary:
                     detail_package_summary.update({packagename:{"anr": 0, "crash":0, "strictmode":0, "other":0}})
                 if item["anr"]:
@@ -227,6 +238,18 @@ class Runner(object):
                     package = ",".join(package)
                     msg = "<br>".join(msg)
                     return (package, msg)
+
+    def delete_log(self, sn):
+        Tools.execute("adb -s {sn} shell rm -rf /data/system/dropbox/*".format(sn=sn))
+        Tools.execute("adb -s {sn} shell rm -rf /data/anr/*".format(sn=sn))
+        Tools.execute("adb -s {sn} shell rm -rf /data/tombstone/*".format(sn=sn))
+        Tools.execute("adb -s {sn} shell rm -rf /data/kernel_log/*".format(sn=sn))
+
+    def get_log(self, sn, log_path):
+        Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
 
 if __name__ == "__main__":
     r = Runner()
