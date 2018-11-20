@@ -8,13 +8,11 @@ import os
 import subprocess
 import sys
 import time
-from _subprocess import GetCurrentProcess
 from itertools import islice
 from multiprocessing.pool import ThreadPool as Pool
 
 # 添加包路径
 from runner.GetCpuInfo import GetCpuInfo
-from runner.GetMemInfo import GetMemInfo
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
@@ -240,12 +238,24 @@ class Runner(object):
                     return (package, msg)
 
     def delete_log(self, sn):
+        """
+        清除设备log
+        :param sn: 设备串号
+        :type sn: str
+        """
         Tools.execute("adb -s {sn} shell rm -rf /data/system/dropbox/*".format(sn=sn))
         Tools.execute("adb -s {sn} shell rm -rf /data/anr/*".format(sn=sn))
         Tools.execute("adb -s {sn} shell rm -rf /data/tombstone/*".format(sn=sn))
         Tools.execute("adb -s {sn} shell rm -rf /data/kernel_log/*".format(sn=sn))
 
     def get_log(self, sn, log_path):
+        """
+        获取设备log
+        :param sn: 设备串号
+        :param log_path: log归档地址
+        :type sn: str
+        :type log_path: str
+        """
         Tools.execute("adb -s {sn} pull /data/system/dropbox/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
