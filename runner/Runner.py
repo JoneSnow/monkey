@@ -12,11 +12,14 @@ from itertools import islice
 from multiprocessing.pool import ThreadPool as Pool
 
 # 添加包路径
+import pygal
+
 from runner.GetCpuInfo import GetCpuInfo
+from runner.ParsePerformanceData import ParsePerformanceData
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
-from runner import ROOT, RUNNER
+from runner import ROOT
 from runner.log import init_log
 from runner.tools import Tools
 
@@ -60,7 +63,9 @@ class Runner(object):
         pool.join()
         for i in info:
             result.update(i.get())
+        self.toBar(result)
         self.to_html(result)
+        ParsePerformanceData().run()
         return result
 
     def checkDevices(self):
@@ -98,7 +103,7 @@ class Runner(object):
     def monkey(self, sn, packages, throttle):
         logger.debug(u"{}, monkey测试开始".format(sn))
         #delete log
-        self.delete_log(sn)
+        # self.delete_log(sn)
         sn_string = sn.replace(":", "_") if ":" in sn else sn
         info = {}
         package_string = ""
@@ -121,10 +126,8 @@ class Runner(object):
             #收集log
             p_log = subprocess.Popen("adb -s {sn} logcat -c && adb -s {sn} logcat -v time > {logcat_log_path}".format(
                 sn=sn,logcat_log_path=logcat_log_path),shell=True)
-            #收集cup占有率信息
-            p_cupinfo = GetCpuInfo(packages=packages[:], sn=sn).run()
-            cmd = r"python {}\GetMemInfo.py -p {} -s {}".format(RUNNER," ".join(packages[:]).strip(), sn)
-            p_meminfo = subprocess.Popen(cmd, shell=True)
+            #收集cpu占有率信息
+            p_cpuinfo = GetCpuInfo(packages=packages[:], sn=sn).run()
             time.sleep(2)
             Tools.execute(
                 "adb -s {sn} shell monkey {package_string} --ignore-timeouts --ignore-crashes"
@@ -132,8 +135,7 @@ class Runner(object):
                 " --pct-syskeys 0 -v -v -v -s 3343 --throttle {throttle} > {mpath}".format(sn=sn, package_string=package_string,
                                                                                            throttle=throttle, mpath=monkey_log_path))
             pis.append(p_log.pid)
-            pis.append(p_meminfo.pid)
-            pis.extend(p_cupinfo)
+            pis.extend(p_cpuinfo)
         finally:
             for p in pis:
                 Tools.execute("taskkill /t /f /pid {}".format(p))
@@ -182,6 +184,19 @@ class Runner(object):
         with open("../result/report.html", "w") as f:
             f.write(s)
 
+    def toBar(self, dic):
+        """
+        系统错误的APP分布直方图
+        :param dic:
+        """
+        bar_chart = pygal.Bar()
+        bar_chart.title = u"系统错误的APP分布"
+        for key, value in dic.items():
+            for key1, value1 in value["detail_package_summary"].items():
+                bar_chart.add(key1, [value1["crash"] + value1["anr"] + value1["strictmode"] + value1["other"]])
+        path = os.path.join(os.path.join(ROOT, "result"), "bar.svg")
+        bar_chart.render_to_file(path)
+        
     def parse_log(self, path):
         dropbox = os.path.join(path, "dropbox")
         for filename in os.listdir(dropbox):
@@ -260,7 +275,6 @@ class Runner(object):
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
-
 if __name__ == "__main__":
     r = Runner()
     r.run()

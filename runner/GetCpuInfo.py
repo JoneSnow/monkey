@@ -21,8 +21,8 @@ class GetCpuInfo(object):
         if not os.path.exists(self.result_sn_path):
             os.mkdir(self.result_sn_path)
 
-    def getCupinfo(self, package):
-        path = os.path.join(self.result_sn_path, "cupinfo__{}__{}__{}".format(self.sn_string, package, Tools(self.sn).getDeviceTime()))
+    def getcpuinfo(self, package):
+        path = os.path.join(self.result_sn_path, "cpuinfo__{}__{}__{}".format(self.sn_string, package, Tools(self.sn).getDeviceTime()))
         cmd = "adb -s {} shell \"top -d 1|grep {}\" > {}".format(self.sn, package, path)
         p = subprocess.Popen(cmd, shell=True)
         return p.pid
@@ -32,7 +32,7 @@ class GetCpuInfo(object):
         self.creatpath()
         if isinstance(self.packages, list):
             for package in self.packages:
-                pis.append(self.getCupinfo(package))
+                pis.append(self.getcpuinfo(package))
         else:
-            pis.append(self.getCupinfo(self.packages))
+            pis.append(self.getcpuinfo(self.packages))
         return pis

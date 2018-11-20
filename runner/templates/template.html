@@ -17,6 +17,7 @@
           <th scope="col">App ANR</th>
           <th scope="col">Strict Mode Error</th>
           <th scope="col">Other</th>
+          <th scope="col">Performance Data</th>
         </tr>
       </thead>
       <tbody>
@@ -60,6 +61,12 @@
                   {%else%} 0
                   {%endif%}
               </td>
+              <td>
+                  <a class="btn btn-info" href="./{{key}}_cpu.svg">CPU</a>
+                  <a class="btn btn-info" href="./{{key}}_mem.svg">RAM</a>
+                  <a class="btn btn-info" href="./bar.svg">Abnormal</a>
+              </td>
+
             </tr>
          {%endfor%}
       </tbody>

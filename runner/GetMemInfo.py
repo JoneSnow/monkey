@@ -1,15 +1,17 @@
 # -*- coding:utf-8 -*-
 # Auther: guofengyang
 # Date: 2018/11/16 17:48
+import csv
+import multiprocessing
 import os
 import re
+import sys
 import time
 
-import sys
+from runner.Runner import Runner
 
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
-from runner.UnicodeWriter import UnicodeWriter
 from runner.tools import Tools
 
 
@@ -32,7 +34,7 @@ class GetMemInfo(object):
 
     def run(self):
         self.creatpath()
-        header = [self.sn + "_" + package for package in self.packages]
+        header = [self.sn + "__" + package for package in self.packages]
         self.toCsv(header)
         while True:
             if isinstance(self.packages, list):
@@ -51,7 +53,7 @@ class GetMemInfo(object):
 
     def toCsv(self, data):
         with open(self.csv_path, 'ab') as infile:
-            writer = UnicodeWriter(infile, delimiter=',')
+            writer = csv.writer(infile, delimiter=',')
             writer.writerow(data)
 
     def creatpath(self):
@@ -60,15 +62,22 @@ class GetMemInfo(object):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
 
+def worker(packages, sn):
+    GetMemInfo(packages, sn).run()
+
 if __name__ == "__main__":
     '''cmd script'''
-    import argparse
-
-    parser = argparse.ArgumentParser("收集APP CUP信息")
-    parser.add_argument("--packages", "-p", action="store", required=True, help="APP应用", nargs="+")
-    parser.add_argument("--sn", "-s", action="store", required=True, help="设备串号")
-
-    args = parser.parse_args()
-    cup = GetMemInfo(args.packages, args.sn).run()
-
+    Runner().checkDevices()
+    pool = []
+    config = Tools.parseConfigJson()
+    for device, content in config.items():
+        sn = content["sn"]
+        packages = content["packages"]
+        p = multiprocessing.Process(target=worker, args=(packages, sn))
+        p.daemon = True
+        pool.append(p)
+    for item in pool:
+        item.start()
+        item.join()
+    print "done!"
 

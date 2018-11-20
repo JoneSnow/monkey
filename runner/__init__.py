@@ -5,3 +5,4 @@ import os
 
 RUNNER = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(RUNNER)
+RESULT = os.path.join(ROOT, "result")
