@@ -163,7 +163,7 @@ class Runner(object):
         """
         logger.debug(u"{}, monkey测试开始".format(sn))
         #delete log
-        # self.delete_log(sn)
+        self.delete_log(sn)
         sn_string = sn.replace(":", "_") if ":" in sn else sn
         info = {}
         package_string = ""
@@ -359,6 +359,10 @@ class Runner(object):
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
+
+    # def kill_all(self):
+    #     Tools.execute("wmic process where name=\"node.exe\" delete")
+
 if __name__ == "__main__":
     r = Runner()
     r.run()
