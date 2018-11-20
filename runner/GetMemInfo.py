@@ -28,11 +28,21 @@ class GetMemInfo(object):
         self.csv_path = os.path.join(self.path, "meminfo__{}.csv".format(Tools(self.sn).getDeviceTime()))
 
     def getMeminfo(self, package):
+        """
+        获取内存信息
+        :param package: 应用包名
+        :return: 内存占有数据
+        :type package: str
+        :rtype: str
+        """
         res = Tools.execute("adb -s {} shell \"dumpsys meminfo {} |grep TOTAL|busybox awk '{{print $2}}'\"".format(self.sn, package))
         res = self.getNumber(res)
         return res
 
     def run(self):
+        """
+        入口函数, 1s一次记录app内存信息
+        """
         self.creatpath()
         header = [self.sn + "__" + package for package in self.packages]
         self.toCsv(header)
@@ -48,15 +58,28 @@ class GetMemInfo(object):
             time.sleep(1)
 
     def getNumber(self, s):
+        """
+        过滤字符中的数字
+        :param s: 字符串
+        :return: 含有数字的字符串
+        :type s: str
+        :rtype: str
+        """
         number_string = "".join(re.findall(r"\d+", s))
         return number_string
 
     def toCsv(self, data):
+        """
+        内存信息写入csv文件中
+        """
         with open(self.csv_path, 'ab') as infile:
             writer = csv.writer(infile, delimiter=',')
             writer.writerow(data)
 
     def creatpath(self):
+        """
+        创建归档数据文件所在路径
+        """
         if not os.path.exists(self.result_path):
             os.mkdir(self.result_path)
         if not os.path.exists(self.path):

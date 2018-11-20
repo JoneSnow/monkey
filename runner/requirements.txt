@@ -1,1 +1,2 @@
-openpyxl==2.5.4
+Jinja==2.10
+pygal==2.4.0

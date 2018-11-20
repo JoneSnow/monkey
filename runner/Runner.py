@@ -42,8 +42,33 @@ class Runner(object):
 
     def run(self):
         """
-        入口函数
-        :return:{u'0123456789ABCDEF': {'duration': '0:00:04.237000', 'crash': 2, 'detail': {'01-01 00:12:12.080': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: main\r\n java.lang.NullPointerException\r\n \tat com.android.commands.monkey.MonkeySourceRandom.randomPoint(MonkeySourceRandom.java:324)\r\n', '01-01 00:12:11.070': ' *** FATAL EXCEPTION IN SYSTEM PROCESS: UI\r\n java.lang.NullPointerException\r\n \tat com.android.internal.widget.PointerLocationView.addPointerEvent(PointerLocationView.java:552)\r\n'}, 'anr': 0, 'rom': '03.02.08950.H30.00009'}}
+        入口函数,
+        :rtype: dict
+        :return:返回monkey统计数据，
+        {"0123456789ABCDEF":  #设备串号
+            "detail":[{       #各个错误文件详细信息
+                "anr":1，     # 出现anr次数
+                "crash":0，   #出现crash次数
+                "filename": 'system_app_anr@1542696522720.txt.gz'， #log中对应的文件名
+                "msg": "",  #错误详细信息
+                "package": 'ecarx.voiceservice v3190 (1.6.0)', #错误应用
+                "strictmode": 0，#出现strictmode次数
+                "other": 0      #其他错误出现次数
+            }],
+            "detail_package_summary":{  #基于应用的错误统计
+                "ecarx.news": {         #应用名称
+                    "anr":0,            #anr出现次数
+                    "crash":0,          #crash出现次数
+                    "other":0,          #其他错误出现次数
+                    "strictmode":1,     #标准模式
+                }
+            },
+            "duration": 0:00:28.766000, #测试持续时间
+            "rom": '18.00.11.84552.00000', #系统版本号
+            "summary":{                 #全部错误数量统计
+                "anr":1, "crash": 0, "other": 0, "strictmode":7
+            }
+        }
         :rtype:dict
         """
         logger.debug(u"start")
@@ -92,15 +117,50 @@ class Runner(object):
                 u"can't find config devices {} in connect devices, please check config.json".format(results))
 
     def getConfigDevices(self):
-        '''
+        """
         获取config配置文件的所有sn号
         :return: 返回含有sn号的生成器
-        '''
+        """
         sns = [value["sn"] for key, value in self.config.items()]
         logger.debug(u"获取配置文件的设备号{}".format(sns))
         return sns
 
     def monkey(self, sn, packages, throttle):
+        """
+        执行monkey测试
+        :param sn: 设备串口号
+        :param packages: app包名
+        :param throttle: 测试频率
+        :type sn: str
+        :type packages: str
+        :type throttle: str
+        :rtype: dict
+        :return: 返回monkey测试数据， 如:
+        {"0123456789ABCDEF":  #设备串号
+            "detail":[{       #各个错误文件详细信息
+                "anr":1，     # 出现anr次数
+                "crash":0，   #出现crash次数
+                "filename": 'system_app_anr@1542696522720.txt.gz'， #log中对应的文件名
+                "msg": "",  #错误详细信息
+                "package": 'ecarx.voiceservice v3190 (1.6.0)', #错误应用
+                "strictmode": 0，#出现strictmode次数
+                "other": 0      #其他错误出现次数
+            }],
+            "detail_package_summary":{  #基于应用的错误统计
+                "ecarx.news": {         #应用名称
+                    "anr":0,            #anr出现次数
+                    "crash":0,          #crash出现次数
+                    "other":0,          #其他错误出现次数
+                    "strictmode":1,     #标准模式
+                }
+            },
+            "duration": 0:00:28.766000, #测试持续时间
+            "rom": '18.00.11.84552.00000', #系统版本号
+            "summary":{                 #全部错误数量统计
+                "anr":1, "crash": 0, "other": 0, "strictmode":7
+            }
+        }
+        """
         logger.debug(u"{}, monkey测试开始".format(sn))
         #delete log
         # self.delete_log(sn)
@@ -175,6 +235,11 @@ class Runner(object):
         return info
 
     def to_html(self, dic):
+        """
+        数据转为html
+        :param dic: monkey测试完的数据， self.monkey返回的字典数据
+        :type dic: dict
+        """
         from jinja2 import PackageLoader, Environment
 
         env = Environment(loader=PackageLoader("runner", 'templates'))  # 创建一个包加载器对象
@@ -187,7 +252,8 @@ class Runner(object):
     def toBar(self, dic):
         """
         系统错误的APP分布直方图
-        :param dic:
+        :param dic: monkey测试完的数据， self.monkey返回的字典数据
+        :type dic: dict
         """
         bar_chart = pygal.Bar()
         bar_chart.title = u"系统错误的APP分布"
@@ -198,12 +264,23 @@ class Runner(object):
         bar_chart.render_to_file(path)
         
     def parse_log(self, path):
+        """
+        解析log
+        :param path:  log所在路径
+        :return: 生成器
+        """
         dropbox = os.path.join(path, "dropbox")
         for filename in os.listdir(dropbox):
             filepath = os.path.join(dropbox, filename)
             yield self.get_info(filename, filepath)
 
     def get_info(self, filename, filepath):
+        """
+        获取filepath中的文件详细错误信息
+        :param filename: 文件名
+        :param filepath: 文件所在路径
+        :return: dict
+        """
         info = {
             "filename": filename,
             "anr": 0,
@@ -229,6 +306,13 @@ class Runner(object):
         return info
 
     def get_info_detail(self, filepath, filetype=".txt"):
+        """
+        文件内容中的详细错误信息
+        :param filepath: 文件所在路径
+        :param filetype: 文件类型，可选参数: ".txt", ".gz"
+        :return:包含包名和想起错误的元素
+        :rtype: tuple
+        """
         if filepath.endswith(filetype):
             package = []
             if filetype == ".txt":
