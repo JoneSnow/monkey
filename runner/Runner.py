@@ -14,11 +14,12 @@ from multiprocessing.pool import ThreadPool as Pool
 # 添加包路径
 import pygal
 
+path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
+sys.path.append(path)
+
 from runner.GetCpuInfo import GetCpuInfo
 from runner.ParsePerformanceData import ParsePerformanceData
 
-path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
-sys.path.append(path)
 from runner import ROOT
 from runner.log import init_log
 from runner.tools import Tools

@@ -8,10 +8,10 @@ import re
 import sys
 import time
 
-from runner.Runner import Runner
-
 path = os.path.dirname(os.path.dirname(os.path.abspath(os.path.realpath(__file__))))
 sys.path.append(path)
+
+from runner.Runner import Runner
 from runner.tools import Tools
 
 

@@ -8,6 +8,7 @@ from collections import defaultdict
 import pygal
 
 from runner import RESULT
+from runner.tools import Tools
 
 
 class ParsePerformanceData:
@@ -168,7 +169,7 @@ class ParsePerformanceData:
                     elif package not in self.result[sn]:
                         self.result[sn][package] = {}
                 else:
-                    mem_list.append(float(item))
+                    mem_list.append(self.strToFloat(item))
             self.result[sn][package]["mem"] = mem_list
         self.result[sn][package]["mem_time"] = t
 
@@ -195,6 +196,12 @@ class ParsePerformanceData:
                 date_chart.add(key+" " + mode, value[mode])
             path = os.path.join(RESULT, "{}_{}.svg".format(sn, mode))
             date_chart.render_to_file(path)
+
+    def strToFloat(self, s):
+        s = Tools.getNumber(s)
+        if s == "":
+            return 0
+        return float(s)
 
 if __name__ == "__main__":
     ParsePerformanceData().run()

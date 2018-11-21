@@ -4,6 +4,7 @@
 import json
 import logging
 import os
+import re
 import subprocess
 import time
 
@@ -189,3 +190,15 @@ class Tools(object):
         else:
             version = ""
         return version
+
+    @staticmethod
+    def getNumber(s):
+        """
+        过滤字符中的数字
+        :param s: 字符串
+        :return: 含有数字的字符串
+        :type s: str
+        :rtype: str
+        """
+        number_string = "".join(re.findall(r"\d+", s))
+        return number_string
