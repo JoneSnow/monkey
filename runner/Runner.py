@@ -296,9 +296,9 @@ class Runner(object):
                     package, msg = detail
                     info["msg"] = msg
                     info["package"] = package
-        if filename.startswith("system_app_anr"):
+        if "app_anr" in filename:
             info["anr"] += 1
-        elif filename.startswith("system_app_crash"):
+        elif "app_crash" in filename:
             info["crash"] += 1
         elif filename.startswith("system_app_strictmode"):
             info["strictmode"] += 1
