@@ -55,7 +55,7 @@ class GetMemInfo(object):
             else:
                 res = self.getMeminfo(self.packages)
                 self.toCsv([res])
-            time.sleep(1)
+            time.sleep(5)
 
     def getNumber(self, s):
         """

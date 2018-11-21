@@ -42,7 +42,7 @@ class GetCpuInfo(object):
         :rtype: int
         """
         path = os.path.join(self.result_sn_path, "cpuinfo__{}__{}__{}".format(self.sn_string, package, Tools(self.sn).getDeviceTime()))
-        cmd = "adb -s {} shell \"top -d 1|grep {}\" > {}".format(self.sn, package, path)
+        cmd = "adb -s {} shell \"top -d 5|grep {}\" > {}".format(self.sn, package, path)
         p = subprocess.Popen(cmd, shell=True)
         return p.pid
 
