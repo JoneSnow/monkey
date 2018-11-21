@@ -347,6 +347,7 @@ class Runner(object):
         Tools.execute("adb -s {sn} shell rm -rf /data/anr/*".format(sn=sn))
         Tools.execute("adb -s {sn} shell rm -rf /data/tombstone/*".format(sn=sn))
         Tools.execute("adb -s {sn} shell rm -rf /data/kernel_log/*".format(sn=sn))
+        Tools.execute("adb -s {sn} shell rm -rf /sdcard/AmapAutoLog/*".format(sn=sn))
 
     def get_log(self, sn, log_path):
         """
@@ -360,6 +361,7 @@ class Runner(object):
         Tools.execute("adb -s {sn} pull /data/anr/ {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/tombstone {log_path}".format(sn=sn, log_path=log_path))
         Tools.execute("adb -s {sn} pull /data/kernel_log {log_path}".format(sn=sn, log_path=log_path))
+        Tools.execute("adb -s {sn} pull /sdcard/AmapAutoLog {log_path}".format(sn=sn, log_path=log_path))
 
     # def kill_all(self):
     #     Tools.execute("wmic process where name=\"node.exe\" delete")
