@@ -289,7 +289,7 @@ class Runner(object):
             "strictmode": 0,
             "other": 0
         }
-        if filename.startswith("system_app"):
+        if filename.startswith("system_app") or filename.startswith("data_app"):
             for item in [".txt", ".gz"]:
                 detail = self.get_info_detail(filepath, item)
                 if detail:
