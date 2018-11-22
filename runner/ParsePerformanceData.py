@@ -193,7 +193,7 @@ class ParsePerformanceData:
             s =u"内存" if mode == "mem" else u"CPU占有率"
             date_chart.title = u"{}统计图".format(s)
             for key, value in content.items():
-                date_chart.add(key+" " + mode, value[mode])
+                date_chart.add(key, value[mode])
             path = os.path.join(RESULT, "{}_{}.svg".format(sn, mode))
             date_chart.render_to_file(path)
 
