@@ -189,7 +189,7 @@ class ParsePerformanceData:
         :param mode: 转换模式，可选参数: "mem" 或者 "cpu"
         """
         for sn, content in self.result.items():
-            s ="内存统计图" if mode == "mem" else "CPU占有率"
+            s ="内存统计图 (单位:KB)" if mode == "mem" else "CPU占有率"
             data = []
             filename = os.path.join(RESULT, "{}_{}.html".format(sn, mode))
             for key, value in content.items():
