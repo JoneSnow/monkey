@@ -2,8 +2,10 @@
   "device1": {
     "sn": "0123456789ABCDEF",
     "packages": [
-      "cn.com.ecarx.xiaoka.carmusic"
+      "com.ecarx.eline",
+      "ecarx.settings",
+      "ecarx.news"
     ],
-    "throttle": "400 300000"
+    "throttle": "500 300000"
   }
 }
