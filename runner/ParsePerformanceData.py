@@ -4,8 +4,10 @@
 import csv
 import os
 from collections import defaultdict
+from datetime import datetime
 
-import pygal
+import plotly
+import plotly.graph_objs as go
 
 from runner import RESULT
 from runner.tools import Tools
@@ -65,10 +67,8 @@ class ParsePerformanceData:
         获取内存信息
         :param filepath: 内存文档所在路径 
         """
-        dic = {}
         path, filename = os.path.split(filepath)
-        time = filename.split(".")[0].split("__")[1]
-        dic["mem_time"] = time
+        time = filename.split(".")[0].split("__")[-1]
         mem, le = [], 0
 
         with open(filepath, "rb") as f:
@@ -171,7 +171,7 @@ class ParsePerformanceData:
                 else:
                     mem_list.append(self.strToFloat(item))
             self.result[sn][package]["mem"] = mem_list
-        self.result[sn][package]["mem_time"] = t
+            self.result[sn][package]["mem_time"] = t
 
     def percentToInt(self, s):
         """
@@ -189,13 +189,31 @@ class ParsePerformanceData:
         :param mode: 转换模式，可选参数: "mem" 或者 "cpu"
         """
         for sn, content in self.result.items():
-            date_chart = pygal.Line(x_label_rotation=20)
-            s =u"内存" if mode == "mem" else u"CPU占有率"
-            date_chart.title = u"{}统计图".format(s)
+            s ="内存统计图" if mode == "mem" else "CPU占有率"
+            data = []
+            filename = os.path.join(RESULT, "{}_{}.html".format(sn, mode))
             for key, value in content.items():
-                date_chart.add(key, value[mode])
-            path = os.path.join(RESULT, "{}_{}.svg".format(sn, mode))
-            date_chart.render_to_file(path)
+                #转时间戳为datetime类型
+                times = []
+                start_time = value["{}_time".format(mode)]
+                for num, item in enumerate(value[mode]):
+                    stamp = num * 5 + float(start_time)
+                    d = datetime.fromtimestamp(stamp)
+                    times.append(d)
+                #定义图形数据
+                trace = go.Scatter(
+                    xcalendar="chinese",
+                    x=times,
+                    y=value[mode],
+                    mode='lines',
+                    name=key
+                )
+                data.append(trace)
+            plotly.offline.plot({
+                "data": data,
+                "layout": go.Layout(title=s)
+            }, auto_open=False, show_link=False, include_plotlyjs=True, filename=filename)
+
 
     def strToFloat(self, s):
         s = Tools.getNumber(s)
