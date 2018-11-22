@@ -147,6 +147,11 @@ class Tools(object):
         res = Tools.execute('adb -s {} shell "date +\\"%Y%m%d_%H%M%S\\""'.format(self.sn)).replace("\r\r\n", "").strip()
         return res
 
+    def getDeviceTimestamp(self):
+        """获取设备当前时间戳"""
+        res = Tools.execute("adb -s {} shell date +%s".format(self.sn)).replace("\r\r\n", "").strip()
+        return res
+
     @staticmethod
     def parseConfigJson():
         """

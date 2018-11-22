@@ -25,7 +25,7 @@ class GetMemInfo(object):
         self.packages = packages
         self.result_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "result")  # result文件夹所在位置
         self.path = os.path.join(self.result_path, self.sn_string) # sn文件夹所在文职
-        self.csv_path = os.path.join(self.path, "meminfo__{}.csv".format(Tools(self.sn).getDeviceTime()))
+        self.csv_path = os.path.join(self.path, "meminfo__{}.csv".format(Tools(self.sn).getDeviceTimestamp()))
 
     def getMeminfo(self, package):
         """
